@@ -106,7 +106,15 @@ fn parse_chunk(
         panic!("Each item should be a chunk object!")
     };
 
-    let item: GenerateContentResponse = serde_json::from_value(item.clone()).unwrap();
+    let item: GenerateContentResponse = serde_json::from_value(item.clone())
+        .map_err(|err| {
+            println!(
+                "\nError: {}\nJSON: {}\n",
+                err,
+                serde_json::to_string_pretty(&item).unwrap()
+            );
+        })
+        .unwrap();
 
     match item {
         GenerateContentResponse::Chunk(chunk) => Ok(chunk),
