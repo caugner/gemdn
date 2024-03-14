@@ -6,6 +6,7 @@ use gemini::{
 use reqwest::Client;
 use reqwest_streams::*;
 use serde_json::{json, Value};
+use slog::{debug, slog_o, Drain};
 use std::{
     env,
     io::{self, Read},
@@ -13,6 +14,8 @@ use std::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let logger = init_logging();
+
     let client = Client::new();
     let api_key = env::var("API_KEY").expect("Usage: API_KEY=... cargo run");
     let model = env::var("MODEL").unwrap_or("gemini-pro".to_string());
@@ -22,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let prompt = read_stdin_or("Write a story about a magic backpack.".to_string());
 
-    println!("Preparing request (model = {})...", model);
+    debug!(logger, "Preparing request"; "model" => format!("{}", model));
     let req = client
         .post(url)
         .header(reqwest::header::ACCEPT, "application/json; charset=UTF-8")
@@ -35,14 +38,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }]
         }));
 
-    println!("Sending request...");
+    debug!(logger, "Sending request...");
     let res = req.send().await?;
 
-    println!("Collecting chunks...");
+    debug!(logger, "Collecting chunks...");
     let stream = res.json_array_stream::<serde_json::Value>(1024 * 1024);
     let chunks: Vec<serde_json::Value> = stream.try_collect().await?;
 
-    println!("Processing chunks...");
+    debug!(logger, "Processing chunks...");
     for chunk in chunks.iter() {
         let chunk = parse_chunk(chunk);
         match chunk {
@@ -72,9 +75,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!();
-    println!("Wrapping up..");
+    debug!(logger, "Wrapping up..");
 
     Ok(())
+}
+
+fn init_logging() -> slog::Logger {
+    let decorator = slog_term::TermDecorator::new().build();
+    let drain = slog_term::FullFormat::new(decorator).build().fuse();
+    let drain = slog_async::Async::new(drain).build().fuse();
+
+    slog::Logger::root(drain, slog_o!())
 }
 
 fn read_stdin_or(default: String) -> String {
