@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CountTokensRequest {
-    pub contents: Content,
+    pub contents: CandidateContent,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,7 +36,7 @@ pub struct RequestContent {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Content {
+pub struct CandidateContent {
     pub role: String,
     pub parts: Vec<Part>,
 }
@@ -87,7 +87,7 @@ pub struct GenerateContentResponseChunk {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Candidate {
-    pub content: Option<Content>,
+    pub content: Option<CandidateContent>,
     pub citation_metadata: Option<CitationMetadata>,
     pub safety_ratings: Option<Vec<SafetyRating>>,
     pub finish_reason: Option<String>,
