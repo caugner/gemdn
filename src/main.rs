@@ -1,4 +1,5 @@
 use atty::Stream;
+use chrono::prelude::*;
 use futures_util::stream::TryStreamExt;
 use gemini::{
     GenerateContentResponse, GenerateContentResponseChunk, GenerateContentResponseError, Part,
@@ -9,7 +10,8 @@ use serde_json::{json, Value};
 use slog::{debug, slog_o, Drain};
 use std::{
     env,
-    io::{self, Read},
+    fs::File,
+    io::{self, Error, Read, Write},
 };
 
 #[tokio::main]
@@ -26,24 +28,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let prompt = read_stdin_or("Write a story about a magic backpack.".to_string());
 
     debug!(logger, "Requesting..."; "model" => format!("{}", model));
+    let input = json!({
+        "contents": [{
+            "parts": [{
+                "text": prompt
+            }]
+        }]
+    });
     let res = client
         .post(url)
         .header(reqwest::header::ACCEPT, "application/json; charset=UTF-8")
         .query(&[("key", &api_key)])
-        .json(&json!({
-            "contents": [{
-                "parts": [{
-                    "text": prompt
-                }]
-            }]
-        }))
+        .json(&input)
         .send()
         .await?;
 
     debug!(logger, "Processing...");
     let mut stream = res.json_array_stream::<serde_json::Value>(1024 * 1024);
 
+    let mut output: Vec<serde_json::Value> = Vec::new();
     while let Ok(Some(item)) = stream.try_next().await {
+        output.push(item.clone());
         match parse_chunk(&item) {
             Ok(chunk) => {
                 let text = chunk
@@ -71,6 +76,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     debug!(logger, "Done.");
+
+    write_log(model, &input, &output)?;
 
     Ok(())
 }
@@ -117,6 +124,30 @@ fn parse_chunk(
         GenerateContentResponse::Chunk(chunk) => Ok(chunk),
         GenerateContentResponse::Error(err) => Err(err),
     }
+}
+
+fn write_log(
+    model: String,
+    input: &serde_json::Value,
+    output: &Vec<serde_json::Value>,
+) -> Result<(), Error> {
+    let filename = format!(
+        "log/{}_{}.json",
+        Local::now().format("%Y-%m-%d_%H-%M-%S"),
+        model
+    );
+    let json = serde_json::to_string_pretty(&json!({
+        "meta": {
+            "model": model
+        },
+        "request": &input,
+        "response": &output
+    }))?;
+
+    let mut file = File::create(filename)?;
+    file.write_all(json.as_bytes())?;
+
+    Ok(())
 }
 
 #[cfg(test)]
