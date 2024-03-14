@@ -41,7 +41,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = json!(request);
     let res = client
         .post(url)
-        .header(reqwest::header::ACCEPT, "application/json; charset=UTF-8")
         .query(&[("key", &api_key)])
         .json(&input)
         .send()
