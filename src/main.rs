@@ -165,6 +165,12 @@ mod tests {
         let _chunk: GenerateContentResponseChunk = serde_json::from_value(data).unwrap();
     }
 
+    #[tokio::test]
+    async fn it_should_parse_response_with_recitation() {
+        let data: serde_json::Value = serde_json::from_str(EXAMPLE_CHUNK_RECITATION).unwrap();
+        let _chunk: GenerateContentResponseChunk = serde_json::from_value(data).unwrap();
+    }
+
     const EXAMPLE_ERROR: &str = r#"[{
         "error": {
           "code": 503,
@@ -215,6 +221,15 @@ mod tests {
                 "probability": "NEGLIGIBLE"
               }
             ]
+          }
+        ]
+      }"#;
+
+    const EXAMPLE_CHUNK_RECITATION: &str = r#"{
+        "candidates": [
+          {
+            "finishReason": "RECITATION",
+            "index": 0
           }
         ]
       }"#;

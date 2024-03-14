@@ -80,7 +80,7 @@ pub struct GenerateContentResponseChunk {
 pub struct Candidate {
     pub content: Option<Content>,
     pub citation_metadata: Option<CitationMetadata>,
-    pub safety_ratings: Vec<SafetyRating>,
+    pub safety_ratings: Option<Vec<SafetyRating>>,
     pub finish_reason: Option<String>,
 }
 
