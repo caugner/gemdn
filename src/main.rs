@@ -25,8 +25,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let prompt = read_stdin_or("Write a story about a magic backpack.".to_string());
 
-    debug!(logger, "Preparing request"; "model" => format!("{}", model));
-    let req = client
+    debug!(logger, "Requesting..."; "model" => format!("{}", model));
+    let res = client
         .post(url)
         .header(reqwest::header::ACCEPT, "application/json; charset=UTF-8")
         .query(&[("key", &api_key)])
@@ -36,15 +36,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "text": prompt
                 }]
             }]
-        }));
+        }))
+        .send()
+        .await?;
 
-    debug!(logger, "Sending request...");
-    let res = req.send().await?;
-
-    debug!(logger, "Collecting chunks...");
+    debug!(logger, "Processing...");
     let mut stream = res.json_array_stream::<serde_json::Value>(1024 * 1024);
 
-    debug!(logger, "Processing chunks...");
     while let Ok(Some(item)) = stream.try_next().await {
         match parse_chunk(&item) {
             Ok(chunk) => {
@@ -72,8 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!();
-    debug!(logger, "Wrapping up..");
+    debug!(logger, "Done.");
 
     Ok(())
 }
