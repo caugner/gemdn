@@ -56,11 +56,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 print!("{}", text);
             }
             Err(err) => {
+                println!();
                 println!("Error: {:?}", err.error);
             }
         }
     }
 
+    println!();
     println!("Wrapping up..");
 
     Ok(())
