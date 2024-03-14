@@ -100,7 +100,7 @@ fn read_stdin_or(default: String) -> String {
         io::stdin()
             .read_to_string(&mut input)
             .expect("Failed to read input");
-        input
+        input.trim().to_string()
     } else {
         default
     }
