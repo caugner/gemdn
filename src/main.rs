@@ -13,9 +13,15 @@ mod fixtures;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     let api_key = env::var("API_KEY").expect("Usage: API_KEY=... cargo run");
+    let model = env::var("MODEL").unwrap_or("gemini-pro".to_string());
+    let url = format!(
+        "https://generativelanguage.googleapis.com/v1beta/models/{}:streamGenerateContent",
+        model
+    );
 
-    println!("Preparing request...");
-    let req = client.post("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:streamGenerateContent")
+    println!("Preparing request (model = {})...", model);
+    let req = client
+        .post(url)
         .header(reqwest::header::ACCEPT, "application/json; charset=UTF-8")
         .query(&[("key", &api_key)])
         .json(&json!({
