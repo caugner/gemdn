@@ -1,5 +1,5 @@
 use atty::Stream;
-use futures_util::TryStreamExt;
+use futures_util::stream::TryStreamExt;
 use gemini::{
     GenerateContentResponse, GenerateContentResponseChunk, GenerateContentResponseError, Part,
 };
@@ -42,13 +42,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let res = req.send().await?;
 
     debug!(logger, "Collecting chunks...");
-    let stream = res.json_array_stream::<serde_json::Value>(1024 * 1024);
-    let chunks: Vec<serde_json::Value> = stream.try_collect().await?;
+    let mut stream = res.json_array_stream::<serde_json::Value>(1024 * 1024);
 
     debug!(logger, "Processing chunks...");
-    for chunk in chunks.iter() {
-        let chunk = parse_chunk(chunk);
-        match chunk {
+    while let Ok(Some(item)) = stream.try_next().await {
+        match parse_chunk(&item) {
             Ok(chunk) => {
                 let text = chunk
                     .candidates
