@@ -44,12 +44,12 @@ pub struct CandidateContent {
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GenerationConfig {
-    pub max_output_tokens: Option<i32>,
+    pub max_output_tokens: Option<u16>,
     pub temperature: Option<f32>,
     pub top_p: Option<f32>,
     pub top_k: Option<i32>,
     pub stop_sequences: Option<Vec<String>>,
-    pub candidate_count: Option<u32>,
+    pub candidate_count: Option<u8>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
