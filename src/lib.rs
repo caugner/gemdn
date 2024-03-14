@@ -16,14 +16,23 @@ pub struct CountTokensResponse {
 
 #[derive(Serialize, Deserialize)]
 pub struct GenerateContentRequest {
-    pub contents: Vec<Content>,
+    pub contents: Vec<RequestContent>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub generation_config: Option<GenerationConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<Tools>>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Tools {
     pub function_declarations: Option<Vec<FunctionDeclaration>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RequestContent {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub role: Option<String>,
+    pub parts: Vec<Part>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

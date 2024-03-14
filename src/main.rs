@@ -2,7 +2,8 @@ use atty::Stream;
 use chrono::prelude::*;
 use futures_util::stream::TryStreamExt;
 use gemini::{
-    GenerateContentResponse, GenerateContentResponseChunk, GenerateContentResponseError, Part,
+    GenerateContentRequest, GenerateContentResponse, GenerateContentResponseChunk,
+    GenerateContentResponseError, Part, RequestContent,
 };
 use reqwest::Client;
 use reqwest_streams::*;
@@ -27,14 +28,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     let prompt = read_stdin_or("Write a story about a magic backpack.".to_string());
 
+    let request: GenerateContentRequest = GenerateContentRequest {
+        contents: vec![RequestContent {
+            role: None,
+            parts: vec![Part::Text(prompt)],
+        }],
+        generation_config: None,
+        tools: None,
+    };
+
     debug!(logger, "Requesting..."; "model" => format!("{}", model));
-    let input = json!({
-        "contents": [{
-            "parts": [{
-                "text": prompt
-            }]
-        }]
-    });
+    let input = json!(request);
     let res = client
         .post(url)
         .header(reqwest::header::ACCEPT, "application/json; charset=UTF-8")
