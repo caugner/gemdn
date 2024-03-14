@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "https://generativelanguage.googleapis.com/v1beta/models/{}:streamGenerateContent",
         model
     );
-    let prompt = read_stdin_or("Write a story about a magic backpack.".to_string());
+    let prompt = read_stdin_or_arg("Write a story about a magic backpack.".to_string());
 
     let request: GenerateContentRequest = GenerateContentRequest {
         contents: vec![RequestContent {
@@ -93,16 +93,21 @@ fn init_logging() -> slog::Logger {
     slog::Logger::root(drain, slog_o!())
 }
 
-fn read_stdin_or(default: String) -> String {
+fn read_stdin_or_arg(default: String) -> String {
     let mut input = String::new();
 
     if !atty::is(Stream::Stdin) {
         io::stdin()
             .read_to_string(&mut input)
             .expect("Failed to read input");
-        input.trim().to_string()
-    } else {
-        default
+        return input.trim().to_string();
+    }
+
+    let args: Vec<String> = env::args().skip(1).collect();
+    match args.len() {
+        0 => default,
+        1 => args.get(0).unwrap().clone(),
+        _ => panic!("Please provide at most one argument containing the prompt."),
     }
 }
 
