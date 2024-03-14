@@ -151,6 +151,12 @@ mod tests {
         assert!(res.is_err());
     }
 
+    #[tokio::test]
+    async fn it_should_parse_response_with_citation() {
+        let data: serde_json::Value = serde_json::from_str(EXAMPLE_CHUNK_WITH_CITATION).unwrap();
+        let _chunk: GenerateContentResponseChunk = serde_json::from_value(data).unwrap();
+    }
+
     const EXAMPLE_ERROR: &str = r#"[{
         "error": {
           "code": 503,
@@ -159,6 +165,51 @@ mod tests {
         }
       }
       ]"#;
+
+    const EXAMPLE_CHUNK_WITH_CITATION: &str = r#"{
+        "candidates": [
+          {
+            "citationMetadata": {
+              "citationSources": [
+                {
+                  "endIndex": 132,
+                  "license": "",
+                  "startIndex": 2,
+                  "uri": "https://issuu.com/diekeure/docs/audace_boussole_1e_graad/s/12119689"
+                }
+              ]
+            },
+            "content": {
+              "parts": [
+                {
+                  "text": ". douze\\n13. treize\\n14. quatorze\\n15. quinze\\n16. seize\\n17. dix-sept\\n18. dix-huit\\n19. dix-neuf\\n20. vingt\\n21. vingt et un\\n22. vingt-deux"
+                }
+              ],
+              "role": "model"
+            },
+            "finishReason": "STOP",
+            "index": 0,
+            "safetyRatings": [
+              {
+                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                "probability": "NEGLIGIBLE"
+              },
+              {
+                "category": "HARM_CATEGORY_HATE_SPEECH",
+                "probability": "NEGLIGIBLE"
+              },
+              {
+                "category": "HARM_CATEGORY_HARASSMENT",
+                "probability": "NEGLIGIBLE"
+              },
+              {
+                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                "probability": "NEGLIGIBLE"
+              }
+            ]
+          }
+        ]
+      }"#;
 
     const EXAMPLE_RESPONSE: &str = r#"[{
         "candidates": [

@@ -93,14 +93,16 @@ pub struct SafetyRating {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Citation {
-    start_index: i32,
-    end_index: i32,
+    end_index: u32,
+    license: String,
+    start_index: u32,
     uri: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CitationMetadata {
-    pub citations: Vec<Citation>,
+    pub citation_sources: Vec<Citation>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
