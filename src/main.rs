@@ -1,3 +1,4 @@
+use atty::Stream;
 use futures_util::TryStreamExt;
 use gemini::{
     GenerateContentResponse, GenerateContentResponseChunk, GenerateContentResponseError, Part,
@@ -5,7 +6,10 @@ use gemini::{
 use reqwest::Client;
 use reqwest_streams::*;
 use serde_json::{json, Value};
-use std::env;
+use std::{
+    env,
+    io::{self, Read},
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,6 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "https://generativelanguage.googleapis.com/v1beta/models/{}:streamGenerateContent",
         model
     );
+    let prompt = read_stdin_or("Write a story about a magic backpack.".to_string());
 
     println!("Preparing request (model = {})...", model);
     let req = client
@@ -25,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .json(&json!({
             "contents": [{
                 "parts": [{
-                    "text": "Write a story about a magic backpack."
+                    "text": prompt
                 }]
             }]
         }));
@@ -70,6 +75,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wrapping up..");
 
     Ok(())
+}
+
+fn read_stdin_or(default: String) -> String {
+    let mut input = String::new();
+
+    if !atty::is(Stream::Stdin) {
+        io::stdin()
+            .read_to_string(&mut input)
+            .expect("Failed to read input");
+        input
+    } else {
+        default
+    }
 }
 
 fn parse_chunk(
